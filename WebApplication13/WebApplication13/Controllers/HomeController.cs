@@ -11,7 +11,7 @@ using WebApplication13.Models;
 
 namespace WebApplication13.Controllers
 {
-    //我试试能不能push成功
+    //我添加了一个git ignore文件，这样下次你上传的时候就不会上传没用的文件了
     public class HomeController : Controller
     {
         public ActionResult Index()
