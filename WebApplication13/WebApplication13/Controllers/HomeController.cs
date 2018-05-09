@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication13.Models;
@@ -40,7 +41,7 @@ namespace WebApplication13.Controllers
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
-                 searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=chinese";
+                 searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=british";
             }else
             {
                  searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=" + search;              
@@ -59,6 +60,7 @@ namespace WebApplication13.Controllers
                     Recipe recipe = new Recipe();
                     recipe.title = recipes.title;
                     recipe.ImageUrl = recipes.image_url;
+                 //   recipe.Id = recipes.recipe_id;        
                     recipesList.Rlist.Add(recipe);
                 }
                 number++;
@@ -70,6 +72,20 @@ namespace WebApplication13.Controllers
            // ViewData["data"] = recipesMap;
             
             return View("MenuList",recipesList);
+        }
+        public string GetIngredient(string recipeid)
+        {   string totalIngredient="";
+            string searchstr = "http://food2fork.com/api/get?key=7980b1abc6ccc9eb785e5aee4e972120&rId=" + recipeid;
+            var request = (HttpWebRequest)WebRequest.Create(searchstr);
+            var response = (HttpWebResponse)request.GetResponse();
+            string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            SpecificRecipeRootObject rb = JsonConvert.DeserializeObject<SpecificRecipeRootObject>(responseString);
+            foreach (Ingredients ingredient in rb.specificRecipe.ingredients)
+            {
+                totalIngredient = totalIngredient + ingredient.ToString();
+            }
+          
+            return totalIngredient;
         }
 
         public ActionResult ChangeRecipes(string search)
@@ -113,6 +129,52 @@ namespace WebApplication13.Controllers
             return PartialView("Recipeslist", recipesList);
         }
 
+        public ActionResult getNutrition()
+        {
+            String url = "https://trackapi.nutritionix.com/v2/natural/nutrients";
+            String[] searchArray = { "five apple", "two bread", "5000ml milk" };
+            String content = "{\"query\":\"";
+            //拼接查询字符串
+            for (int i = 0; i < searchArray.Length; i++)
+            {
+                content = content + searchArray[i] + " and ";
+                if (i == searchArray.Length - 1)
+                {
+                    content = content + "\"}";
+                }
+            }
+            String result = "";
+            Dictionary<string, string> calroieMap = new Dictionary<string, string>();
+            //发送请求
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.Headers.Add("x-app-id", "dd79a6ae");
+            req.Headers.Add("x-app-key", "039958acd7a63688e95b981df11901b6");
+            byte[] data = Encoding.UTF8.GetBytes(content);
+            req.ContentLength = data.Length;
+            using (Stream reqStream = req.GetRequestStream())
+            {
+                reqStream.Write(data, 0, data.Length);
+                reqStream.Close();
+            }
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            Stream stream = resp.GetResponseStream();
+            //获取响应内容  
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                result = reader.ReadToEnd();
+            }
+            //json解析
+            RootObject rb = JsonConvert.DeserializeObject<RootObject>(result);
+            foreach (Foods ep in rb.foods)
+            {
+                calroieMap.Add(ep.food_name, ep.nf_calories);
+            }
+
+            ViewData["data"] = calroieMap;
+            return View();
+        }
 
         public int GetDefaultRecipe()
         {
@@ -211,6 +273,28 @@ namespace WebApplication13.Controllers
         {
             public string count { get; set; }
             public List<Recipes> recipes { get; set; }
+        }
+
+        public class Ingredients
+        {
+        }
+
+        public class SpecificRecipe
+        {
+            public string publisher { get; set; }
+            public string f2f_url { get; set; }
+            public List<Ingredients> ingredients { get; set; }
+            public string source_url { get; set; }
+            public string recipe_id { get; set; }
+            public string image_url { get; set; }
+            public string social_rank { get; set; }
+            public string publisher_url { get; set; }
+            public string title { get; set; }
+        }
+
+        public class SpecificRecipeRootObject
+        {
+            public SpecificRecipe specificRecipe { get; set; }
         }
 
     }
