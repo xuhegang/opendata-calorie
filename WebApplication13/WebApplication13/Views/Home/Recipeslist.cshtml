@@ -1,0 +1,18 @@
+﻿@model WebApplication13.Models.RecipesList
+
+@foreach (var recipe in Model.Rlist)
+{
+    <div class="col-lg-4 col-md-4 col-sm-6 recipeswrapper">
+        <a href=@recipe.ImageUrl class="fh5co-card-item image-popup">
+            <figure class="figuretype">
+                <div class="overlay"><i class="ti-plus"></i></div>
+                <img src=@recipe.ImageUrl alt="Image" class="img-responsive">
+            </figure>
+            <div class="fh5co-text blanktype">
+                <h2>@recipe.title</h2>
+                <p>description...</p>
+                <p><span class="price cursive-font">2001 kCal</span></p>
+            </div>
+        </a>
+    </div>
+}
