@@ -5,13 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication13.Models;
 
 namespace WebApplication13.Controllers
 {
-    //我试试能不能push成功
     public class HomeController : Controller
     {
         public ActionResult Index()
@@ -41,116 +41,111 @@ namespace WebApplication13.Controllers
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
-                 searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=british";
+                 searchstr = "http://food2fork.com/api/search?key=b18c7f80205225f5a6c3585901b06092&q=chicken";
             }else
             {
-                 searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=" + search;              
+                 searchstr = "http://food2fork.com/api/search?key=b18c7f80205225f5a6c3585901b06092&q=" + search;              
             }
             var request = (HttpWebRequest)WebRequest.Create(searchstr);
             var response = (HttpWebResponse)request.GetResponse();
             string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
             RecipesRootObject rb = JsonConvert.DeserializeObject<RecipesRootObject>(responseString);
             RecipesList recipesList = new RecipesList();
-            recipesList.Rlist = new List<Recipe>();
+            recipesList.Rlist = new List<SpecificRecipe>();
             int number = 0;
             foreach (Recipes recipes in rb.recipes)
             {  
                 if (!recipesMap.ContainsKey(recipes.title))
                 {
-                    Recipe recipe = new Recipe();
-                    recipe.title = recipes.title;
-                    recipe.ImageUrl = recipes.image_url;
-                 //   recipe.Id = recipes.recipe_id;        
-                    recipesList.Rlist.Add(recipe);
+                    SpecificRecipe specificrecipe = new SpecificRecipe();
+                    specificrecipe.title = recipes.title;
+                    specificrecipe.ImageUrl = recipes.image_url;
+                    specificrecipe.Id = recipes.recipe_id;
+                    specificrecipe.Ingredients = GetIngredient(recipes.recipe_id);
+
+                    string[] searchArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
+                    specificrecipe.Calorie = getNutrition(searchArray, recipes.recipe_id);
+                    recipesList.Rlist.Add(specificrecipe);
                 }
                 number++;
-                if (number == 18)
+                if (number == 9)
                 {
                     break;
                 }
             }
-           // ViewData["data"] = recipesMap;
-            
-            return View("MenuList",recipesList);
-        }
-        public string GetIngredient(string recipeid)
-        {   string totalIngredient="";
-            string searchstr = "http://food2fork.com/api/get?key=7980b1abc6ccc9eb785e5aee4e972120&rId=" + recipeid;
-            var request = (HttpWebRequest)WebRequest.Create(searchstr);
-            var response = (HttpWebResponse)request.GetResponse();
-            string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            SpecificRecipeRootObject rb = JsonConvert.DeserializeObject<SpecificRecipeRootObject>(responseString);
-            foreach (Ingredients ingredient in rb.specificRecipe.ingredients)
-            {
-                totalIngredient = totalIngredient + ingredient.ToString();
-            }
-          
-            return totalIngredient;
-        }
-
-        public ActionResult ChangeRecipes(string search)
-        {
-            string searchstr = null;
-            var gender = Request.Form["option"];
-            var age = Request.Form["age"];
-            Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
-                searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=chinese";
+               return View("MenuList",recipesList);
             }
             else
             {
-                searchstr = "http://food2fork.com/api/search?key=7980b1abc6ccc9eb785e5aee4e972120&q=" + search;
+               return PartialView("Recipeslist", recipesList);
             }
+           
+        }
+        public string GetIngredient(string recipeid)
+        {   string totalIngredient = "";
+        
+            string searchstr = "http://food2fork.com/api/get?key=b18c7f80205225f5a6c3585901b06092&rId=" + recipeid;
             var request = (HttpWebRequest)WebRequest.Create(searchstr);
             var response = (HttpWebResponse)request.GetResponse();
             string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            RecipesRootObject rb = JsonConvert.DeserializeObject<RecipesRootObject>(responseString);
-            RecipesList recipesList = new RecipesList();
-            recipesList.Rlist = new List<Recipe>();
-            int number = 0;
-            foreach (Recipes recipes in rb.recipes)
+      
+            SpecificRecipeRootObject rb = JsonConvert.DeserializeObject<SpecificRecipeRootObject>(responseString);
+            int i = 0;
+            foreach(string ingredient in rb.recipe.ingredients)
             {
-                if (!recipesMap.ContainsKey(recipes.title))
+                if (i != 0)
                 {
-                    Recipe recipe = new Recipe();
-                    recipe.title = recipes.title;
-                    recipe.ImageUrl = recipes.image_url;
-                    recipesList.Rlist.Add(recipe);
+                    totalIngredient = totalIngredient + "," + ingredient;
                 }
-                number++;
-                if (number == 18)
+                else
                 {
-                    break;
+                    totalIngredient = totalIngredient + ingredient;
                 }
+                i++;
             }
-            // ViewData["data"] = recipesMap;
-
-            return PartialView("Recipeslist", recipesList);
+           // string[] searchArray = Regex.Split(totalIngredient, ",", RegexOptions.IgnoreCase);
+            return totalIngredient;
         }
 
-        public ActionResult getNutrition()
+        
+
+        public string getNutrition(string[] searchArray, string id)
         {
             String url = "https://trackapi.nutritionix.com/v2/natural/nutrients";
-            String[] searchArray = { "five apple", "two bread", "5000ml milk" };
-            String content = "{\"query\":\"";
-            //拼接查询字符串
+            searchArray[searchArray.Length - 1] = searchArray[searchArray.Length - 1].Replace("\n", "");
             for (int i = 0; i < searchArray.Length; i++)
             {
-                content = content + searchArray[i] + " and ";
-                if (i == searchArray.Length - 1)
+                if (searchArray[i].Contains("\""))
                 {
-                    content = content + "\"}";
+                    searchArray[i]= searchArray[i].Replace("\"", " ");
                 }
+                if (searchArray[i].Contains("&"))
+                {
+                    searchArray[i] = searchArray[i].Replace("&", " ");
+                }
+
             }
+            String content = "{\"query\":\"";
+            //拼接查询字符串
+             for (int i = 0; i < searchArray.Length; i++)
+             {
+                 content = content + searchArray[i]+ " and ";
+                 if (i == searchArray.Length - 1)
+                 {
+                     content = content + "\"}";
+                }
+             }
+           
             String result = "";
             Dictionary<string, string> calroieMap = new Dictionary<string, string>();
             //发送请求
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "POST";
             req.ContentType = "application/json";
-            req.Headers.Add("x-app-id", "dd79a6ae");
-            req.Headers.Add("x-app-key", "039958acd7a63688e95b981df11901b6");
+            req.Headers.Add("x-app-id", "7258bd60");
+            req.Headers.Add("x-app-key", "d8de75744e7faca5111b0e60efc09549");
             byte[] data = Encoding.UTF8.GetBytes(content);
             req.ContentLength = data.Length;
             using (Stream reqStream = req.GetRequestStream())
@@ -169,11 +164,19 @@ namespace WebApplication13.Controllers
             RootObject rb = JsonConvert.DeserializeObject<RootObject>(result);
             foreach (Foods ep in rb.foods)
             {
-                calroieMap.Add(ep.food_name, ep.nf_calories);
+                if (!calroieMap.ContainsKey(ep.food_name))
+                {
+                    calroieMap.Add(ep.food_name, ep.nf_calories);
+                }
+            }
+            double calroie = 0;
+            foreach(var item in calroieMap)
+            {
+                calroie = calroie + double.Parse(item.Value);
             }
 
-            ViewData["data"] = calroieMap;
-            return View();
+            return calroie.ToString();
+            
         }
 
         public int GetDefaultRecipe()
@@ -275,15 +278,12 @@ namespace WebApplication13.Controllers
             public List<Recipes> recipes { get; set; }
         }
 
-        public class Ingredients
-        {
-        }
-
-        public class SpecificRecipe
+      
+        public class Recipe
         {
             public string publisher { get; set; }
             public string f2f_url { get; set; }
-            public List<Ingredients> ingredients { get; set; }
+            public List<string> ingredients { get; set; }
             public string source_url { get; set; }
             public string recipe_id { get; set; }
             public string image_url { get; set; }
@@ -294,7 +294,7 @@ namespace WebApplication13.Controllers
 
         public class SpecificRecipeRootObject
         {
-            public SpecificRecipe specificRecipe { get; set; }
+            public Recipe recipe { get; set; }
         }
 
     }

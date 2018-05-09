@@ -300,7 +300,7 @@
                 $.ajaxSetup({
                     async: true
                 });
-                $("#insertpoint").load("/Home/ChangeRecipes?search=" + encodeURI(buttonval));
+                $("#insertpoint").load("/Home/InitialRec?search=" + encodeURI(buttonval));
             });
             $("#searchform").submit(function (event) {
                 var event = event || window.event;
@@ -311,7 +311,7 @@
                 $.ajaxSetup({
                     async: true
                 });
-                $("#insertpoint").load("/Home/ChangeRecipes?search=" + encodeURI(inputval));
+                $("#insertpoint").load("/Home/InitialRec?search=" + encodeURI(inputval));
             });         
         });
     </script>  
