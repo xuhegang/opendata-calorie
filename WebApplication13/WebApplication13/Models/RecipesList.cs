@@ -8,6 +8,7 @@ namespace WebApplication13.Models
     public class RecipesList
     {
         public List<SpecificRecipe> Rlist { get; set; }
+        public PersonDetail Pd { get; set; }
     }
     public class SpecificRecipe
     {
@@ -16,5 +17,6 @@ namespace WebApplication13.Models
         public string Id { get; set; }
         public string Ingredients { get; set; }
         public string Calorie { get; set; }
+        public int Yield { get; set; } //记录这道菜是几人份
     }
 }

@@ -119,7 +119,7 @@
                                                     <div class="row form-group">
                                                         <div class="col-md-12">
                                                             <label for="activities">Gender</label>
-                                                            <select name="option" id="activities" class="form-control">
+                                                            <select name="genderOption" id="activities" class="form-control">
                                                                 <option value="Male">Male</option>
                                                                 <option value="Female">Female</option>
                                                             </select>
@@ -127,8 +127,30 @@
                                                     </div>
                                                     <div class="row form-group">
                                                         <div class="col-md-12">
-                                                            <label for="date-start">Age</label>
-                                                            <input type="text" name="age" id="Age" class="form-control">
+                                                            <label for="date-start">Age(years)</label>
+                                                            <input type="text" required="required" name="age" id="Age" class="form-control" placeholder="please input your age (1 to 100) years">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-md-12">
+                                                            <label for="hight">Hight(cm)</label>
+                                                            <input type="text" required="required" name="hight" id="Hight" class="form-control" placeholder="please input your Hight (120 to 200) cm">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-md-12">
+                                                            <label for="weight">Weight(kg)</label>
+                                                            <input type="text" required="required" name="weight" id="Weight" class="form-control" placeholder="please input your Weight (20 to 120) kg">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-md-12">
+                                                            <label for="activities">Expect</label>
+                                                            <select name="expectOption" id="activities2" class="form-control">
+                                                                <option value="increase">I want to be fat</option>
+                                                                <option value="decrease">I want to lose weight</option>
+                                                                <option value="noChange">I am fine</option>
+                                                            </select>
                                                         </div>
                                                     </div>
                                                     <div class="row form-group">
@@ -177,6 +199,20 @@
     <!-- Main -->
     <script src="~/js/main.js"></script>
 
+    <!-- 设置必须填写个人信息，否则按钮不可用,目前有点问题，以后再改
+    <script>
+    $(document).ready(function(){
+        $("#age").bind("input propertychange", function() {
+            var value=$("#age").val();
+            if(value==""){
+                $("#submit").attr("disabled",true);
+             }else{
+                $("#submit").attr("disabled",false);
+            }
+        })
+    });
+    </script>
+    -->
 </body>
 </html>
 

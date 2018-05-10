@@ -35,9 +35,42 @@ namespace WebApplication13.Controllers
 
         public ActionResult InitialRec(string search )
         {
-            string searchstr = null;        
-            var gender= Request.Form["option"];
-            var age = Request.Form["age"];
+            string searchstr = null;
+            //尝试将数据放入model
+            PersonDetail pd = new PersonDetail();
+            pd.Gender = Request.Form["genderOption"];
+            pd.Age = Request.Form["age"];
+            pd.Height = Request.Form["hight"];
+            pd.Weight = Request.Form["weight"];
+            pd.Expect = Request.Form["expectOption"];
+            switch (pd.Gender)
+            {
+                //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
+                case "Male":
+                    pd.planCal = 66 + (13.7 * double.Parse(pd.Weight)) + (5 * double.Parse(pd.Height)) - (6.8 * double.Parse(pd.Age));
+                    break;
+                //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
+                case "Female":
+                    pd.planCal = 655 + (9.6 * double.Parse(pd.Weight)) + (1.8 * double.Parse(pd.Height)) - (4.7 * double.Parse(pd.Age));
+                    break;
+                default:
+                    break;
+            }
+            //根据需求判断最终计划的卡路里
+            switch (pd.Expect)
+            {
+                //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
+                case "increase":
+                    pd.planCal += 500;
+                    break;
+                //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
+                case "decrease":
+                    pd.planCal -= 500;
+                    break;
+                default:
+                    break;
+            }
+
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
@@ -58,15 +91,16 @@ namespace WebApplication13.Controllers
                 if (!recipesMap.ContainsKey(hitsItem.recipe.label))
                 {
                     SpecificRecipe specificrecipe = new SpecificRecipe();
-                    specificrecipe.title = hitsItem.recipe.label;
+                    specificrecipe.title = hitsItem.recipe.label;           
                     specificrecipe.ImageUrl = hitsItem.recipe.image;
                     //specificrecipe.Id = recipes.recipe_id;
                     foreach(string str in hitsItem.recipe.ingredientLines)
                     {
                         specificrecipe.Ingredients += str;
                     }
-                    
-                    string[] searchArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
+
+                    //string[] searchArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
+                    specificrecipe.Yield = (int)float.Parse(hitsItem.recipe.yield);
                     specificrecipe.Calorie = ((int)(float.Parse(hitsItem.recipe.calories) / float.Parse(hitsItem.recipe.yield))).ToString();
                     recipesList.Rlist.Add(specificrecipe);
                 }
@@ -76,6 +110,9 @@ namespace WebApplication13.Controllers
                     break;
                 }
             }
+            //把信息放入大类...
+            recipesList.Pd = pd;
+
             if (search == null)
             {
                return View("MenuList",recipesList);
