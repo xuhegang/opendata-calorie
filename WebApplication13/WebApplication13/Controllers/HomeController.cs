@@ -12,10 +12,6 @@ using WebApplication13.Models;
 
 namespace WebApplication13.Controllers
 {
-<<<<<<< HEAD
-=======
-    //我添加了一个git ignore文件，这样下次你上传的时候就不会上传没用的文件了
->>>>>>> 2c23940dcdf1f01c26cc09f777dc4337d6d2d046
     public class HomeController : Controller
     {
         public ActionResult Index()
@@ -45,30 +41,33 @@ namespace WebApplication13.Controllers
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
-                 searchstr = "http://food2fork.com/api/search?key=b18c7f80205225f5a6c3585901b06092&q=chicken";
+                 searchstr = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
             }else
             {
-                 searchstr = "http://food2fork.com/api/search?key=b18c7f80205225f5a6c3585901b06092&q=" + search;              
+                 searchstr = "https://api.edamam.com/search?q=" + search + "&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";              
             }
             var request = (HttpWebRequest)WebRequest.Create(searchstr);
             var response = (HttpWebResponse)request.GetResponse();
             string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            RecipesRootObject rb = JsonConvert.DeserializeObject<RecipesRootObject>(responseString);
+            Root rb = JsonConvert.DeserializeObject<Root>(responseString);
             RecipesList recipesList = new RecipesList();
             recipesList.Rlist = new List<SpecificRecipe>();
             int number = 0;
-            foreach (Recipes recipes in rb.recipes)
+            foreach (HitsItem hitsItem in rb.hits)
             {  
-                if (!recipesMap.ContainsKey(recipes.title))
+                if (!recipesMap.ContainsKey(hitsItem.recipe.label))
                 {
                     SpecificRecipe specificrecipe = new SpecificRecipe();
-                    specificrecipe.title = recipes.title;
-                    specificrecipe.ImageUrl = recipes.image_url;
-                    specificrecipe.Id = recipes.recipe_id;
-                    specificrecipe.Ingredients = GetIngredient(recipes.recipe_id);
-
+                    specificrecipe.title = hitsItem.recipe.label;
+                    specificrecipe.ImageUrl = hitsItem.recipe.image;
+                    //specificrecipe.Id = recipes.recipe_id;
+                    foreach(string str in hitsItem.recipe.ingredientLines)
+                    {
+                        specificrecipe.Ingredients += str;
+                    }
+                    
                     string[] searchArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
-                    specificrecipe.Calorie = getNutrition(searchArray, recipes.recipe_id);
+                    specificrecipe.Calorie = ((int)(float.Parse(hitsItem.recipe.calories) / float.Parse(hitsItem.recipe.yield))).ToString();
                     recipesList.Rlist.Add(specificrecipe);
                 }
                 number++;
@@ -87,35 +86,36 @@ namespace WebApplication13.Controllers
             }
            
         }
-        public string GetIngredient(string recipeid)
-        {   string totalIngredient = "";
-        
-            string searchstr = "http://food2fork.com/api/get?key=b18c7f80205225f5a6c3585901b06092&rId=" + recipeid;
-            var request = (HttpWebRequest)WebRequest.Create(searchstr);
-            var response = (HttpWebResponse)request.GetResponse();
-            string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-      
-            SpecificRecipeRootObject rb = JsonConvert.DeserializeObject<SpecificRecipeRootObject>(responseString);
-            int i = 0;
-            foreach(string ingredient in rb.recipe.ingredients)
-            {
-                if (i != 0)
-                {
-                    totalIngredient = totalIngredient + "," + ingredient;
-                }
-                else
-                {
-                    totalIngredient = totalIngredient + ingredient;
-                }
-                i++;
-            }
-           // string[] searchArray = Regex.Split(totalIngredient, ",", RegexOptions.IgnoreCase);
-            return totalIngredient;
-        }
+        //public string GetIngredient(string recipeid)
+        //{
+        //    string totalIngredient = "";
 
-        
+        //    string searchstr = "http://food2fork.com/api/get?key=b18c7f80205225f5a6c3585901b06092&rId=" + recipeid;
+        //    var request = (HttpWebRequest)WebRequest.Create(searchstr);
+        //    var response = (HttpWebResponse)request.GetResponse();
+        //    string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
 
-        public string getNutrition(string[] searchArray, string id)
+        //    Root rb = JsonConvert.DeserializeObject<Root>(responseString);
+        //    int i = 0;
+        //    foreach (string ingredient in rb.recipe.ingredients)
+        //    {
+        //        if (i != 0)
+        //        {
+        //            totalIngredient = totalIngredient + "," + ingredient;
+        //        }
+        //        else
+        //        {
+        //            totalIngredient = totalIngredient + ingredient;
+        //        }
+        //        i++;
+        //    }
+        //    // string[] searchArray = Regex.Split(totalIngredient, ",", RegexOptions.IgnoreCase);
+        //    return totalIngredient;
+        //}
+
+
+
+        public string getNutrition(string[] searchArray,string serveNum)
         {
             String url = "https://trackapi.nutritionix.com/v2/natural/nutrients";
             searchArray[searchArray.Length - 1] = searchArray[searchArray.Length - 1].Replace("\n", "");
@@ -173,13 +173,13 @@ namespace WebApplication13.Controllers
                     calroieMap.Add(ep.food_name, ep.nf_calories);
                 }
             }
-            double calroie = 0;
+            int calroie = 0;
             foreach(var item in calroieMap)
             {
-                calroie = calroie + double.Parse(item.Value);
+                calroie = calroie + (int)float.Parse(item.Value);
             }
 
-            return calroie.ToString();
+            return (calroie/(int)float.Parse(serveNum)).ToString();
             
         }
 
@@ -283,7 +283,7 @@ namespace WebApplication13.Controllers
         }
 
       
-        public class Recipe
+        /*public class Recipe
         {
             public string publisher { get; set; }
             public string f2f_url { get; set; }
@@ -300,6 +300,962 @@ namespace WebApplication13.Controllers
         {
             public Recipe recipe { get; set; }
         }
+        */
 
+
+        // 。。。。
+        public class Params
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> sane { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> q { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> app_key { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> health { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> from { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> to { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> calories { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> app_id { get; set; }
+        }
+
+        public class IngredientsItem
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string text { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double weight { get; set; }
+        }
+
+        public class ENERC_KCAL
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FAT
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FASAT
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FATRN
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FAMS
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FAPU
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class CHOCDF
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FIBTG
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class SUGAR
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class PROCNT
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class CHOLE
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class NA
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class CA
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class MG
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class K
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FE
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class ZN
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class P
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITA_RAE
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITC
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class THIA
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class RIBF
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class NIA
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITB6A
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FOLDFE
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class FOLFD
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITB12
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITD
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class TOCPHA
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class VITK1
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double quantity { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class TotalNutrients
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public ENERC_KCAL ENERC_KCAL { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FAT FAT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FASAT FASAT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FATRN FATRN { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FAMS FAMS { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FAPU FAPU { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CHOCDF CHOCDF { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FIBTG FIBTG { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public SUGAR SUGAR { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public PROCNT PROCNT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CHOLE CHOLE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public NA NA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CA CA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public MG MG { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public K K { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FE FE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public ZN ZN { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public P P { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITA_RAE VITA_RAE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITC VITC { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public THIA THIA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public RIBF RIBF { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public NIA NIA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITB6A VITB6A { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FOLDFE FOLDFE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FOLFD FOLFD { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITB12 VITB12 { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITD VITD { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public TOCPHA TOCPHA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITK1 VITK1 { get; set; }
+        }
+
+        
+
+       
+        
+
+        public class TotalDaily
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public ENERC_KCAL ENERC_KCAL { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FAT FAT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FASAT FASAT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CHOCDF CHOCDF { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FIBTG FIBTG { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public PROCNT PROCNT { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CHOLE CHOLE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public NA NA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public CA CA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public MG MG { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public K K { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FE FE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public ZN ZN { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public P P { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITA_RAE VITA_RAE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITC VITC { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public THIA THIA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public RIBF RIBF { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public NIA NIA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITB6A VITB6A { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public FOLDFE FOLDFE { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITB12 VITB12 { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITD VITD { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public TOCPHA TOCPHA { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public VITK1 VITK1 { get; set; }
+        }
+
+        public class SubItem
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string tag { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string schemaOrgTag { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double total { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string hasRDI { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double daily { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+        }
+
+        public class DigestItem
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string tag { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string schemaOrgTag { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double total { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string hasRDI { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public double daily { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string unit { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<SubItem> sub { get; set; }
+        }
+
+        public class Recipe
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string uri { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string label { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string image { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string source { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string url { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string shareAs { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string yield { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> dietLabels { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> healthLabels { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> cautions { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<string> ingredientLines { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<IngredientsItem> ingredients { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string calories { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string totalWeight { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string totalTime { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public TotalNutrients totalNutrients { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public TotalDaily totalDaily { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public List<DigestItem> digest { get; set; }
+        }
+
+        public class HitsItem
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public Recipe recipe { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string bookmarked { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string bought { get; set; }
+        }
+
+        public class Root
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string q { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public int from { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public int to { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public Params params2 { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string more { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public int count { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<HitsItem> hits { get; set; }
     }
+
+}
 }
