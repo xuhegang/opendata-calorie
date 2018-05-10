@@ -32,12 +32,11 @@ namespace WebApplication13.Controllers
 
             return View();
         }
-
+        static PersonDetail pd = new PersonDetail();
         public ActionResult InitialRec(string search )
         {
             string searchstr = null;
             //尝试将数据放入model
-            PersonDetail pd = new PersonDetail();
             pd.Gender = Request.Form["genderOption"];
             pd.Age = Request.Form["age"];
             pd.Height = Request.Form["hight"];
@@ -74,10 +73,18 @@ namespace WebApplication13.Controllers
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
-                 searchstr = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
-            }else
+                //old key
+                searchstr = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
+                //new key 旧的用完了就用这个
+                //searchstr = "https://api.edamam.com/search?q=chicken&app_id=a0079ab5&app_key=84e0a515092f45d3f74c8e25bbaabf49";
+
+            }
+            else
             {
-                 searchstr = "https://api.edamam.com/search?q=" + search + "&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";              
+                //old key
+                searchstr = "https://api.edamam.com/search?q=" + search + "&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
+                //new key 旧的用完了就用这个
+                //searchstr = "https://api.edamam.com/search?q=" + search + "&app_id=a0079ab5&app_key=84e0a515092f45d3f74c8e25bbaabf49";
             }
             var request = (HttpWebRequest)WebRequest.Create(searchstr);
             var response = (HttpWebResponse)request.GetResponse();
