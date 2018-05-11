@@ -15,7 +15,7 @@ namespace WebApplication13.Models
         public string Expect { get; set; } //记录用户是想增肥还是减肥还是维持
         public double planCal { get; set; } //记录用户目标的卡路里
         public double currentCal { get; set; } //记录用户当前添加的总卡路里数量
-        public RecipesList myRecipes { get; set; }//记录用户想吃的所有菜品
+        public List<string> myRecipes { get; set; }//记录用户想吃的所有菜品
 
         //默认一个构造函数，并赋予默认值。 防止用户不填写信息直接进入页面
         public PersonDetail()
@@ -27,7 +27,7 @@ namespace WebApplication13.Models
             this.Expect = "noChange";//默认不想增肥
             this.planCal = 2000;
             this.currentCal = 0;
-            this.myRecipes = null;
+            this.myRecipes = new List<string>();
         }
     }
 }

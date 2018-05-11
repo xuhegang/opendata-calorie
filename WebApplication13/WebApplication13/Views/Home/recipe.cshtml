@@ -1,4 +1,4 @@
-﻿@model WebApplication13.Models.SpecificRecipe
+﻿@*@model WebApplication13.Models.SpecificRecipe*@
 
 <!DOCTYPE HTML>
 <!--
@@ -98,7 +98,7 @@
                 </div>
             </div>
             <!--添加按鈕-->
-            <div id="button1">
+            <div id="button1" class="1">
                 <input type="checkbox" id="check"></input><label id="label" for="check"><span class="opacity">ADD TO LIST</span><span class="thanks">ADDED</span></label>
                 <div class="light3"></div>
                 <div id="arrow">
@@ -124,12 +124,11 @@
                     <div class="col-md-4  gtco-heading">
                         <h2 class="cursive-font primary-color">Ingredients</h2>
                         <ul>
-
-                            <li>@Model.title</li>
-                            <li>Ingredients</li>
-                            <li>Ingredients</li>
-                            <li>Ingredients</li>
-                            <li>Ingredients</li>
+                            @*@foreach (string str in Model.IngredientsArray)
+                            {
+                                <li>@str</li>
+                            }*@
+                          
                         </ul>
                     </div>
                     <div class="col-md-4  gtco-heading ">
@@ -146,11 +145,20 @@
                     <div class="col-md-4  gtco-heading">
                         <h2 class="cursive-font primary-color form-inline ">My Recipe List</h2>
                         <ul class="Rlist">
-                            <li class="Rli"><a href="#">Zurich</a></li>
-                            <li class="Rli"><a href="#">Geneva</a></li>
-                            <li class="Rli"><a href="#">Winterthur</a></li>
-                            <li class="Rli"><a href="#">Lausanne</a></li>
-                            <li class="Rli"><a href="#">Lucerne</a></li>
+                          @{
+                              List<string> list = (List<String>)ViewBag.myRecipes;
+                              if (list.Count != 0)
+                              {
+                                  
+                                  foreach (var recipe in list)
+                                  {
+                                    <li class="Rli"><a href="#">@recipe</a></li>
+                                  }
+                              }
+                        }
+                              
+
+
                         </ul>
                     </div>
                     <div class="col-md-12  gtco-heading">
@@ -388,5 +396,6 @@
 
     <!-- Main -->
     <script src="~/js/main.js"></script>
+    <script src="~/js/addToList.js"></script>
 </body>
 </html>

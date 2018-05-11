@@ -182,6 +182,7 @@
     <Content Include="images\img_bg_1.jpg" />
     <Content Include="images\img_bg_3.jpg" />
     <Content Include="images\loader.gif" />
+    <Content Include="js\addToList.js" />
     <Content Include="js\bootstrap-datepicker.min.js" />
     <Content Include="js\bootstrap-datetimepicker.min.js" />
     <Content Include="js\bootstrap.min.js" />

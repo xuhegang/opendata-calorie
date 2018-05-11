@@ -35,15 +35,28 @@ namespace WebApplication13.Controllers
         static PersonDetail pd = new PersonDetail();
         static RecipesList recipesList;
 
+        public void Add(string rid)
+        {
+            foreach (SpecificRecipe sp in recipesList.Rlist)
+            {
+                if (sp.Id.Equals(rid) && !pd.myRecipes.Contains(sp.title))
+                {
+                    pd.myRecipes.Add(sp.title);
+                    
+                }
+            }
+        }
         public ActionResult Detail(string rid)
         {
             foreach(SpecificRecipe sp in recipesList.Rlist)
             {
                 if (sp.Id.Equals(rid))
                 {
-                    return View("recipe", sp);
+                    ViewBag.myRecipes = pd.myRecipes;
+                    return View("recipe");
                 }
             }
+            
             return View("recipe");
         }
         public ActionResult InitialRec(string search )
@@ -117,10 +130,14 @@ namespace WebApplication13.Controllers
                     specificrecipe.Id = (rid++).ToString();
                     foreach(string str in hitsItem.recipe.ingredientLines)
                     {
-                        specificrecipe.Ingredients += str;
+                        if (specificrecipe.Ingredients == null)
+                        {
+                            specificrecipe.Ingredients += str;
+                        }
+                        specificrecipe.Ingredients += (","  + str);
                     }
 
-                    //string[] searchArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
+                    specificrecipe.IngredientsArray = Regex.Split(specificrecipe.Ingredients, ",", RegexOptions.IgnoreCase);
                     specificrecipe.Yield = (int)float.Parse(hitsItem.recipe.yield);
                     specificrecipe.Calorie = ((int)(float.Parse(hitsItem.recipe.calories) / float.Parse(hitsItem.recipe.yield))).ToString();
                     recipesList.Rlist.Add(specificrecipe);
