@@ -421,7 +421,7 @@
     <Content Include="Views\Home\.DS_Store" />
     <Content Include="Views\Home\Menulist.cshtml" />
     <Content Include="Views\Home\Recipeslist.cshtml" />
-    <Content Include="Views\Detail\recipe.cshtml" />
+    <Content Include="Views\Home\recipe.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

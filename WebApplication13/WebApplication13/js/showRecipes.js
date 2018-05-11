@@ -1,27 +1,26 @@
 ﻿window.onload = function () {
-    var figuretype = document.getelementsbyclassname("figuretype");
-    var blanktype = document.getelementsbyclassname("blanktype")
-    var recipeswrapper = document.getelementsbyclassname("recipeswrapper");
-    for (var i = 0; i < figuretype.length; i++) {
+    var figuretype = document.getElementsByClassName("figuretype");
+    var blanktype = document.getElementsByClassName("blanktype")
+    var recipeswrapper = document.getElementsByClassName("recipeswrapper");
+
+    var rid;
+    for (let i = 0; i < figuretype.length; i++) {
         figuretype[i].onclick = function (event) {
-            event.stoppropagation();
-            event.preventdefault();
+            
+            event.stopPropagation();
+            event.preventDefault();
+            rid = figuretype[i].nextElementSibling.firstElementChild.className;
+            window.location.href = "/Home/Detail?rid=" + rid;
         }
     }
     for (var j = 0; j < blanktype.length; j++) {
         blanktype[j].onclick = function (event) {
-            event.stoppropagation();
-            event.preventdefault();
-            alert("blank")
+            rid = blanktype[j].firstElementChild.className;
+            event.stopPropagation();
+            event.preventDefault();
+            //alert("blank");
+            window.lcoation.href = "/Home/Detail?rid=" +rid;
         }
-    }
-    recipeswrapper.onclick = function (event) {
-       console.log(event.target);
-    }
-    for (var i = 0; i < recipeswrapper.length; i++) {
-        recipeswrapper[0].addeventlistener("click", function () {
-            alert("hello");
-        });
     }
     
 }

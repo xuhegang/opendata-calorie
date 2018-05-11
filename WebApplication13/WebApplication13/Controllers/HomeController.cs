@@ -33,6 +33,19 @@ namespace WebApplication13.Controllers
             return View();
         }
         static PersonDetail pd = new PersonDetail();
+        static RecipesList recipesList;
+
+        public ActionResult Detail(string rid)
+        {
+            foreach(SpecificRecipe sp in recipesList.Rlist)
+            {
+                if (sp.Id.Equals(rid))
+                {
+                    return View("recipe", sp);
+                }
+            }
+            return View("recipe");
+        }
         public ActionResult InitialRec(string search )
         {
             string searchstr = null;
@@ -90,9 +103,10 @@ namespace WebApplication13.Controllers
             var response = (HttpWebResponse)request.GetResponse();
             string responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
             Root rb = JsonConvert.DeserializeObject<Root>(responseString);
-            RecipesList recipesList = new RecipesList();
+            recipesList = new RecipesList();
             recipesList.Rlist = new List<SpecificRecipe>();
             int number = 0;
+            int rid = 0;
             foreach (HitsItem hitsItem in rb.hits)
             {  
                 if (!recipesMap.ContainsKey(hitsItem.recipe.label))
@@ -100,7 +114,7 @@ namespace WebApplication13.Controllers
                     SpecificRecipe specificrecipe = new SpecificRecipe();
                     specificrecipe.title = hitsItem.recipe.label;           
                     specificrecipe.ImageUrl = hitsItem.recipe.image;
-                    //specificrecipe.Id = recipes.recipe_id;
+                    specificrecipe.Id = (rid++).ToString();
                     foreach(string str in hitsItem.recipe.ingredientLines)
                     {
                         specificrecipe.Ingredients += str;
