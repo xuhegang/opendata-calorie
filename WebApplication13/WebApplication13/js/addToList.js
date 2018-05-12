@@ -49,4 +49,8 @@
        
         
     })
+    $("#check2").click(function () {
+        window.location.href="/Home/CheckOut";
+    })
+
 })

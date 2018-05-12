@@ -35,6 +35,39 @@ namespace WebApplication13.Controllers
         static PersonDetail pd = new PersonDetail();
         static RecipesList recipesList;
 
+        public ActionResult CheckOut()
+        {
+            
+            ViewBag.myRecipes = pd;
+            return View();
+        }
+
+        public void GetArray()
+        {
+            int str1 = 0;
+            int str2 = 0;
+            int str3 = 0;
+            int str4 = 0;
+            int str5 = 0;
+            int str6 = 0;
+
+           
+            foreach (var recipe in pd.myRecipes)
+            {
+                
+                str1 += int.Parse(Regex.Replace(recipe.NutritionMap[1], @"[^0-9]+", ""));
+                str2 += int.Parse(Regex.Replace(recipe.NutritionMap[3], @"[^0-9]+", ""));
+                str3 += int.Parse(Regex.Replace(recipe.NutritionMap[5], @"[^0-9]+", ""));
+                str4 += int.Parse(Regex.Replace(recipe.NutritionMap[7], @"[^0-9]+", ""));
+                str5 += int.Parse(Regex.Replace(recipe.NutritionMap[9], @"[^0-9]+", ""));
+                str6 += int.Parse(Regex.Replace(recipe.NutritionMap[11], @"[^0-9]+", ""));
+            }
+
+            string str = str1 + "," + str2 + "," + str3 + "," + str4 + "," + str5 + "," + str6;
+  
+            Response.Write(str);
+            Response.End();
+        }
         public void Add(string rid)
         {
             foreach (SpecificRecipe sp in recipesList.Rlist)
@@ -171,15 +204,35 @@ namespace WebApplication13.Controllers
                    
                     
                     specificrecipe.NutritionMap[0] = "Total Fat";
-                    specificrecipe.NutritionMap[1] = (int)(hitsItem.recipe.totalNutrients.FAT.quantity) + hitsItem.recipe.totalNutrients.FAT.unit;
+                    if(hitsItem.recipe.totalNutrients.FAT != null)
+                    {
+                        specificrecipe.NutritionMap[1] = (int)(hitsItem.recipe.totalNutrients.FAT.quantity) + hitsItem.recipe.totalNutrients.FAT.unit;
+                    }
+                    
                     specificrecipe.NutritionMap[2] = "Cholesterol";
-                    specificrecipe.NutritionMap[3] = ((int)(hitsItem.recipe.totalNutrients.CHOLE.quantity)) + hitsItem.recipe.totalNutrients.CHOLE.unit;
+                    if (hitsItem.recipe.totalNutrients.CHOLE != null)
+                    {
+                        specificrecipe.NutritionMap[3] = ((int)(hitsItem.recipe.totalNutrients.CHOLE.quantity)) + hitsItem.recipe.totalNutrients.CHOLE.unit;
+                    }
+                   
                     specificrecipe.NutritionMap[4] = "Sodium";
-                    specificrecipe.NutritionMap[5] = (int)(hitsItem.recipe.totalNutrients.NA.quantity) + hitsItem.recipe.totalNutrients.NA.unit;
+                    if (hitsItem.recipe.totalNutrients.NA != null)
+                    {
+                        specificrecipe.NutritionMap[5] = (int)(hitsItem.recipe.totalNutrients.NA.quantity) + hitsItem.recipe.totalNutrients.NA.unit;
+                    }
+                    
                     specificrecipe.NutritionMap[6] = "Potassium";
-                    specificrecipe.NutritionMap[7] = (int)(hitsItem.recipe.totalNutrients.K.quantity) + hitsItem.recipe.totalNutrients.K.unit;
+                    if (hitsItem.recipe.totalNutrients.K != null)
+                    {
+                        specificrecipe.NutritionMap[7] = (int)(hitsItem.recipe.totalNutrients.K.quantity) + hitsItem.recipe.totalNutrients.K.unit;
+                    }
+                   
                     specificrecipe.NutritionMap[8] = "Total Carbohydrates";
-                    specificrecipe.NutritionMap[9] = ((int)(hitsItem.recipe.totalNutrients.SUGAR.quantity) + (int)(hitsItem.recipe.totalNutrients.FIBTG.quantity)) + hitsItem.recipe.totalNutrients.SUGAR.unit;
+                    if (hitsItem.recipe.totalNutrients.SUGAR != null && hitsItem.recipe.totalNutrients.FIBTG!=null)
+                    {
+                        specificrecipe.NutritionMap[9] = ((int)(hitsItem.recipe.totalNutrients.SUGAR.quantity) + (int)(hitsItem.recipe.totalNutrients.FIBTG.quantity)) + hitsItem.recipe.totalNutrients.SUGAR.unit;
+                    }
+                   
                     specificrecipe.NutritionMap[10] = "Protein";
                     specificrecipe.NutritionMap[11] = (int)(hitsItem.recipe.totalNutrients.PROCNT.quantity) + hitsItem.recipe.totalNutrients.PROCNT.unit;
                 }
