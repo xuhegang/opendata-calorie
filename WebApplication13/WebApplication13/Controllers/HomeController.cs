@@ -39,10 +39,26 @@ namespace WebApplication13.Controllers
         {
             foreach (SpecificRecipe sp in recipesList.Rlist)
             {
-                if (sp.Id.Equals(rid) && !pd.myRecipes.Contains(sp.title))
+                if (sp.Id.Equals(rid) && !pd.myRecipes.Contains(sp))
                 {
-                    pd.myRecipes.Add(sp.title);
+                    pd.myRecipes.Add(sp);
                     
+                }
+                else
+                {
+                    int a = 0;
+                }
+            }
+        }
+
+        public void Remove(string rid)
+        {
+            foreach (SpecificRecipe sp in recipesList.Rlist)
+            {
+                if (sp.Id.Equals(rid) && pd.myRecipes.Contains(sp))
+                {
+                    pd.myRecipes.Remove(sp);
+
                 }
             }
         }
@@ -53,6 +69,8 @@ namespace WebApplication13.Controllers
                 if (sp.Id.Equals(rid))
                 {
                     ViewBag.myRecipes = pd.myRecipes;
+                    ViewBag.sp = sp;
+                    ViewBag.nutrition = sp.NutritionMap;
                     return View("recipe");
                 }
             }
@@ -141,6 +159,29 @@ namespace WebApplication13.Controllers
                     specificrecipe.Yield = (int)float.Parse(hitsItem.recipe.yield);
                     specificrecipe.Calorie = ((int)(float.Parse(hitsItem.recipe.calories) / float.Parse(hitsItem.recipe.yield))).ToString();
                     recipesList.Rlist.Add(specificrecipe);
+                    /*specificrecipe.NutritionMap = new Dictionary<string, string>();
+                    //添加营养数据
+                    specificrecipe.NutritionMap.Add("Total Fat", (int)(hitsItem.recipe.totalNutrients.FAT.quantity) + hitsItem.recipe.totalNutrients.FAT.unit);
+                    specificrecipe.NutritionMap.Add("Cholesterol", ((int)(hitsItem.recipe.totalNutrients.CHOLE.quantity)) + hitsItem.recipe.totalNutrients.CHOLE.unit);
+                    specificrecipe.NutritionMap.Add("Sodium", (int)(hitsItem.recipe.totalNutrients.NA.quantity) + hitsItem.recipe.totalNutrients.NA.unit);
+                    specificrecipe.NutritionMap.Add("Potassium", (int)(hitsItem.recipe.totalNutrients.K.quantity) + hitsItem.recipe.totalNutrients.K.unit);
+                    specificrecipe.NutritionMap.Add("Total Carbohydrates", (int)(hitsItem.recipe.totalNutrients.SUGAR.quantity)+(int)(hitsItem.recipe.totalNutrients.FIBTG.quantity) + hitsItem.recipe.totalNutrients.SUGAR.unit); 
+                    specificrecipe.NutritionMap.Add("Protein", (int)(hitsItem.recipe.totalNutrients.PROCNT.quantity) + hitsItem.recipe.totalNutrients.PROCNT.unit);
+                    */
+                   
+                    
+                    specificrecipe.NutritionMap[0] = "Total Fat";
+                    specificrecipe.NutritionMap[1] = (int)(hitsItem.recipe.totalNutrients.FAT.quantity) + hitsItem.recipe.totalNutrients.FAT.unit;
+                    specificrecipe.NutritionMap[2] = "Cholesterol";
+                    specificrecipe.NutritionMap[3] = ((int)(hitsItem.recipe.totalNutrients.CHOLE.quantity)) + hitsItem.recipe.totalNutrients.CHOLE.unit;
+                    specificrecipe.NutritionMap[4] = "Sodium";
+                    specificrecipe.NutritionMap[5] = (int)(hitsItem.recipe.totalNutrients.NA.quantity) + hitsItem.recipe.totalNutrients.NA.unit;
+                    specificrecipe.NutritionMap[6] = "Potassium";
+                    specificrecipe.NutritionMap[7] = (int)(hitsItem.recipe.totalNutrients.K.quantity) + hitsItem.recipe.totalNutrients.K.unit;
+                    specificrecipe.NutritionMap[8] = "Total Carbohydrates";
+                    specificrecipe.NutritionMap[9] = ((int)(hitsItem.recipe.totalNutrients.SUGAR.quantity) + (int)(hitsItem.recipe.totalNutrients.FIBTG.quantity)) + hitsItem.recipe.totalNutrients.SUGAR.unit;
+                    specificrecipe.NutritionMap[10] = "Protein";
+                    specificrecipe.NutritionMap[11] = (int)(hitsItem.recipe.totalNutrients.PROCNT.quantity) + hitsItem.recipe.totalNutrients.PROCNT.unit;
                 }
                 number++;
                 if (number == 9)
@@ -189,10 +230,9 @@ namespace WebApplication13.Controllers
         //}
 
 
-
         public string getNutrition(string[] searchArray,string serveNum)
         {
-            String url = "https://trackapi.nutritionix.com/v2/natural/nutrients";
+            String url = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
             searchArray[searchArray.Length - 1] = searchArray[searchArray.Length - 1].Replace("\n", "");
             for (int i = 0; i < searchArray.Length; i++)
             {

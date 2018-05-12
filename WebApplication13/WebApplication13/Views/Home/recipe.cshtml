@@ -1,5 +1,7 @@
 ﻿@*@model WebApplication13.Models.SpecificRecipe*@
-
+@{ 
+    ViewBag.Title = "Detail";
+}
 <!DOCTYPE HTML>
 <!--
     Aesthetic by gettemplates.co
@@ -94,11 +96,11 @@
             <div class="row row-mt-12em">
                 <div class="col-md-7 mt-text animate-box" data-animate-effect="fadeInUp">
                     <span class="intro-text-small">BY<a href="https://www.realsimple.com/author/ananda-eidelstein" target="_blank">ANANDA EIDELSTEIN (作者）</a></span>
-                    <h1 class="cursive-font">Sweet Potato-and-Kale Tortilla Soup</h1>
+                    <h1 class="cursive-font" id="spTitle">@ViewBag.sp.title</h1>
                 </div>
             </div>
             <!--添加按鈕-->
-            <div id="button1" class="1">
+            <div id="button1" class="@ViewBag.sp.Id">
                 <input type="checkbox" id="check"></input><label id="label" for="check"><span class="opacity">ADD TO LIST</span><span class="thanks">ADDED</span></label>
                 <div class="light3"></div>
                 <div id="arrow">
@@ -124,36 +126,53 @@
                     <div class="col-md-4  gtco-heading">
                         <h2 class="cursive-font primary-color">Ingredients</h2>
                         <ul>
-                            @*@foreach (string str in Model.IngredientsArray)
-                            {
-                                <li>@str</li>
-                            }*@
+                            @{
+                                var specificRecipe = ViewBag.sp;
+                                foreach (string ingredient in specificRecipe.IngredientsArray)
+                                {
+                                    <li>@ingredient</li>
+                                }
+                            }
                           
                         </ul>
                     </div>
                     <div class="col-md-4  gtco-heading ">
                         <h2 class="cursive-font primary-color">Nutritions</h2>
                         <ul class="recipelist">
-                            <li>Nutritions</li>
-                            <li>Nutritions</li>
-                            <li>Nutritions</li>
-                            <li>Nutritions</li>
-                            <li>Nutritions</li>
-                            <li>Nutritions</li>
+                            @*@{
+                                var specificRecipe2 = ViewBag.sp;
+                                foreach (KeyValuePair<string,string> nutrition in specificRecipe2.NutritionMap)
+                                {
+                                   var a = nutrition.key
+
+                                    <li>@a : </li>
+                                }
+                            }*@
+                            @{
+                                var nutritionArray = ViewBag.nutrition;
+                                for(var i = 0; i < nutritionArray.Length; i+=2)
+                                {
+                                    var j = i + 1;
+                                    <li>@nutritionArray[i] :  @nutritionArray[j]</li>
+                                }
+                            }
                         </ul>
                     </div>
                     <div class="col-md-4  gtco-heading">
                         <h2 class="cursive-font primary-color form-inline ">My Recipe List</h2>
-                        <ul class="Rlist">
+                        <ul class="Rlist" id="rList" data-calorie ="@ViewBag.sp.Calorie">
                           @{
-                              List<string> list = (List<String>)ViewBag.myRecipes;
+                              var list = ViewBag.myRecipes;
+                              var total = 0;
                               if (list.Count != 0)
                               {
-                                  
+
                                   foreach (var recipe in list)
                                   {
-                                    <li class="Rli"><a href="#">@recipe</a></li>
+                                      total += int.Parse(recipe.Calorie);
+                                    <li class="Rli" id="@recipe.title" data-title="@recipe.title"><a href="#">@recipe.title: @recipe.Calorie KCal</a></li>
                                   }
+                                <li class="Rli" id="rLi" data-totalCalorie="@total"><a href="#">Total calorie is @total KCal</a></li>
                               }
                         }
                               

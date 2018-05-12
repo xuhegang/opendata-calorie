@@ -19,5 +19,12 @@ namespace WebApplication13.Models
         public string[] IngredientsArray { get; set; }
         public string Calorie { get; set; }
         public int Yield { get; set; } //记录这道菜是几人份
+        //public Dictionary<string,string> NutritionMap { get; set; }
+        public string[] NutritionMap { get; set; }
+
+        public SpecificRecipe()
+        {
+            this.NutritionMap = new string[12];
+        }
     }
 }
