@@ -50,7 +50,7 @@
         
     })
     $("#check2").click(function () {
-        window.location.href="/Home/CheckOut";
+        window.location.href ="/Home/CheckOut";
     })
 
 })

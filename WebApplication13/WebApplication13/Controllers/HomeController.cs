@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,13 +36,8 @@ namespace WebApplication13.Controllers
         }
         static PersonDetail pd = new PersonDetail();
         static RecipesList recipesList;
+        static List<SpecificRecipe> recommandList = new List<SpecificRecipe>();
 
-        public ActionResult CheckOut()
-        {
-            
-            ViewBag.myRecipes = pd;
-            return View();
-        }
 
         public void GetArray()
         {
@@ -63,7 +59,12 @@ namespace WebApplication13.Controllers
                 str5 += int.Parse(Regex.Replace(recipe.NutritionMap[9], @"[^0-9]+", ""));
                 str6 += int.Parse(Regex.Replace(recipe.NutritionMap[11], @"[^0-9]+", ""));
             }
-
+            str1 /= 65;
+            str2 /= 300;
+            str3 /= 2262;
+            str4 /= 3467;
+            str5 /= 308;
+            str6 /= 45;
             string str = str1 + "," + str2 + "," + str3 + "," + str4 + "," + str5 + "," + str6;
   
             Response.Write(str);
@@ -98,63 +99,77 @@ namespace WebApplication13.Controllers
         }
         public ActionResult Detail(string rid)
         {
+            recommandList.Clear();
             foreach(SpecificRecipe sp in recipesList.Rlist)
             {
                 if (sp.Id.Equals(rid))
                 {
+                    string[] target = new string[3];
+                    target[0] = getTargetMile("walk", int.Parse(sp.Calorie));
+                    target[1] = getTargetMile("ran", int.Parse(sp.Calorie));
+                    target[2] = getTargetMile("bicycling", int.Parse(sp.Calorie));
                     ViewBag.myRecipes = pd.myRecipes;
                     ViewBag.sp = sp;
                     ViewBag.nutrition = sp.NutritionMap;
-                    return View("recipe");
+                    ViewBag.exercise = target;
+                    
+
+                }
+                else
+                {
+                    if(recommandList.Count<6)
+                        recommandList.Add(sp);
                 }
             }
-            
+            ViewBag.recommand = recommandList;
             return View("recipe");
         }
         public ActionResult InitialRec(string search )
         {
             string searchstr = null;
             //尝试将数据放入model
-            pd.Gender = Request.Form["genderOption"];
-            pd.Age = Request.Form["age"];
-            pd.Height = Request.Form["hight"];
-            pd.Weight = Request.Form["weight"];
-            pd.Expect = Request.Form["expectOption"];
-            switch (pd.Gender)
+            if (search == null)
             {
-                //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
-                case "Male":
-                    pd.planCal = 66 + (13.7 * double.Parse(pd.Weight)) + (5 * double.Parse(pd.Height)) - (6.8 * double.Parse(pd.Age));
-                    break;
-                //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
-                case "Female":
-                    pd.planCal = 655 + (9.6 * double.Parse(pd.Weight)) + (1.8 * double.Parse(pd.Height)) - (4.7 * double.Parse(pd.Age));
-                    break;
-                default:
-                    break;
+                pd.Gender = Request.Form["genderOption"];
+                pd.Age = Request.Form["age"];
+                pd.Height = Request.Form["hight"];
+                pd.Weight = Request.Form["weight"];
+                pd.Expect = Request.Form["expectOption"];
+                switch (pd.Gender)
+                {
+                    //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
+                    case "Male":
+                        pd.planCal = 66 + (13.7 * double.Parse(pd.Weight)) + (5 * double.Parse(pd.Height)) - (6.8 * double.Parse(pd.Age));
+                        break;
+                    //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
+                    case "Female":
+                        pd.planCal = 655 + (9.6 * double.Parse(pd.Weight)) + (1.8 * double.Parse(pd.Height)) - (4.7 * double.Parse(pd.Age));
+                        break;
+                    default:
+                        break;
+                }
+                //根据需求判断最终计划的卡路里
+                switch (pd.Expect)
+                {
+                    //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
+                    case "increase":
+                        pd.planCal += 500;
+                        break;
+                    //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
+                    case "decrease":
+                        pd.planCal -= 500;
+                        break;
+                    default:
+                        break;
+                }
             }
-            //根据需求判断最终计划的卡路里
-            switch (pd.Expect)
-            {
-                //男: BMR = 66 + ( 13.7 x 体重kg ) + ( 5 x 身高cm ) - ( 6.8 x 年龄years )
-                case "increase":
-                    pd.planCal += 500;
-                    break;
-                //女: BMR = 655 + ( 9.6 x 体重kg ) + ( 1.8 x 身高cm ) - ( 4.7 x 年龄years )
-                case "decrease":
-                    pd.planCal -= 500;
-                    break;
-                default:
-                    break;
-            }
-
             Dictionary<string, string> recipesMap = new Dictionary<string, string>();
             if (search == null)
             {
                 //old key
-                searchstr = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
+                searchstr = "https://api.edamam.com/search?q=Cookies&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
                 //new key 旧的用完了就用这个
-                //searchstr = "https://api.edamam.com/search?q=chicken&app_id=a0079ab5&app_key=84e0a515092f45d3f74c8e25bbaabf49";
+                //searchstr = "https://api.edamam.com/search?q=Cookies&app_id=a0079ab5&app_key=84e0a515092f45d3f74c8e25bbaabf49";
 
             }
             else
@@ -176,6 +191,7 @@ namespace WebApplication13.Controllers
             {  
                 if (!recipesMap.ContainsKey(hitsItem.recipe.label))
                 {
+                    recipesMap.Add(hitsItem.recipe.label, hitsItem.recipe.label);
                     SpecificRecipe specificrecipe = new SpecificRecipe();
                     specificrecipe.title = hitsItem.recipe.label;           
                     specificrecipe.ImageUrl = hitsItem.recipe.image;
@@ -209,11 +225,18 @@ namespace WebApplication13.Controllers
                     {
                         specificrecipe.NutritionMap[1] = (int)(hitsItem.recipe.totalNutrients.FAT.quantity) + hitsItem.recipe.totalNutrients.FAT.unit;
                     }
-                    
+                    else
+                    {
+                        specificrecipe.NutritionMap[1] = "0";
+                    }
                     specificrecipe.NutritionMap[2] = "Cholesterol";
                     if (hitsItem.recipe.totalNutrients.CHOLE != null)
                     {
                         specificrecipe.NutritionMap[3] = ((int)(hitsItem.recipe.totalNutrients.CHOLE.quantity)) + hitsItem.recipe.totalNutrients.CHOLE.unit;
+                    }
+                    else
+                    {
+                        specificrecipe.NutritionMap[3] = "0";
                     }
                    
                     specificrecipe.NutritionMap[4] = "Sodium";
@@ -221,21 +244,39 @@ namespace WebApplication13.Controllers
                     {
                         specificrecipe.NutritionMap[5] = (int)(hitsItem.recipe.totalNutrients.NA.quantity) + hitsItem.recipe.totalNutrients.NA.unit;
                     }
-                    
+                    else
+                    {
+                        specificrecipe.NutritionMap[5] = "0";
+                    }
+
                     specificrecipe.NutritionMap[6] = "Potassium";
                     if (hitsItem.recipe.totalNutrients.K != null)
                     {
                         specificrecipe.NutritionMap[7] = (int)(hitsItem.recipe.totalNutrients.K.quantity) + hitsItem.recipe.totalNutrients.K.unit;
                     }
-                   
+                    else
+                    {
+                        specificrecipe.NutritionMap[7] = "0";
+                    }
+
                     specificrecipe.NutritionMap[8] = "Total Carbohydrates";
                     if (hitsItem.recipe.totalNutrients.SUGAR != null && hitsItem.recipe.totalNutrients.FIBTG!=null)
                     {
                         specificrecipe.NutritionMap[9] = ((int)(hitsItem.recipe.totalNutrients.SUGAR.quantity) + (int)(hitsItem.recipe.totalNutrients.FIBTG.quantity)) + hitsItem.recipe.totalNutrients.SUGAR.unit;
                     }
-                   
+                    else
+                    {
+                        specificrecipe.NutritionMap[9] = "0";
+                    }
                     specificrecipe.NutritionMap[10] = "Protein";
-                    specificrecipe.NutritionMap[11] = (int)(hitsItem.recipe.totalNutrients.PROCNT.quantity) + hitsItem.recipe.totalNutrients.PROCNT.unit;
+                    if (hitsItem.recipe.totalNutrients.PROCNT != null)
+                    {
+                        specificrecipe.NutritionMap[11] = (int)(hitsItem.recipe.totalNutrients.PROCNT.quantity) + hitsItem.recipe.totalNutrients.PROCNT.unit;
+                    }
+                    else
+                    {
+                        specificrecipe.NutritionMap[11] = "0";
+                    }
                 }
                 number++;
                 if (number == 9)
@@ -284,72 +325,155 @@ namespace WebApplication13.Controllers
         //}
 
 
-        public string getNutrition(string[] searchArray,string serveNum)
-        {
-            String url = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
-            searchArray[searchArray.Length - 1] = searchArray[searchArray.Length - 1].Replace("\n", "");
-            for (int i = 0; i < searchArray.Length; i++)
-            {
-                if (searchArray[i].Contains("\""))
-                {
-                    searchArray[i]= searchArray[i].Replace("\"", " ");
-                }
-                if (searchArray[i].Contains("&"))
-                {
-                    searchArray[i] = searchArray[i].Replace("&", " ");
-                }
+        //public string getNutrition(string[] searchArray,string serveNum)
+        //{
+        //    String url = "https://api.edamam.com/search?q=chicken&app_id=548f1190&app_key=a1eca730c61f3d43957dde7be72596ca";
+        //    searchArray[searchArray.Length - 1] = searchArray[searchArray.Length - 1].Replace("\n", "");
+        //    for (int i = 0; i < searchArray.Length; i++)
+        //    {
+        //        if (searchArray[i].Contains("\""))
+        //        {
+        //            searchArray[i]= searchArray[i].Replace("\"", " ");
+        //        }
+        //        if (searchArray[i].Contains("&"))
+        //        {
+        //            searchArray[i] = searchArray[i].Replace("&", " ");
+        //        }
 
+        //    }
+        //    String content = "{\"query\":\"";
+        //    //拼接查询字符串
+        //     for (int i = 0; i < searchArray.Length; i++)
+        //     {
+        //         content = content + searchArray[i]+ " and ";
+        //         if (i == searchArray.Length - 1)
+        //         {
+        //             content = content + "\"}";
+        //        }
+        //     }
+           
+        //    String result = "";
+        //    Dictionary<string, string> calroieMap = new Dictionary<string, string>();
+        //    //发送请求
+        //    HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+        //    req.Method = "POST";
+        //    req.ContentType = "application/json";
+        //    req.Headers.Add("x-app-id", "7258bd60");
+        //    req.Headers.Add("x-app-key", "d8de75744e7faca5111b0e60efc09549");
+        //    byte[] data = Encoding.UTF8.GetBytes(content);
+        //    req.ContentLength = data.Length;
+        //    using (Stream reqStream = req.GetRequestStream())
+        //    {
+        //        reqStream.Write(data, 0, data.Length);
+        //        reqStream.Close();
+        //    }
+        //    HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+        //    Stream stream = resp.GetResponseStream();
+        //    //获取响应内容  
+        //    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+        //    {
+        //        result = reader.ReadToEnd();
+        //    }
+        //    //json解析
+        //    RootObject rb = JsonConvert.DeserializeObject<RootObject>(result);
+        //    foreach (Foods ep in rb.foods)
+        //    {
+        //        if (!calroieMap.ContainsKey(ep.food_name))
+        //        {
+        //            calroieMap.Add(ep.food_name, ep.nf_calories);
+        //        }
+        //    }
+        //    int calroie = 0;
+        //    foreach(var item in calroieMap)
+        //    {
+        //        calroie = calroie + (int)float.Parse(item.Value);
+        //    }
+
+        //    return (calroie/(int)float.Parse(serveNum)).ToString();
+            
+        //}
+
+        public ActionResult CheckOut()
+        
+        {
+            
+           
+           
+            int totalcal=0;
+            foreach(SpecificRecipe sp in pd.myRecipes)
+            {
+                totalcal += int.Parse(sp.Calorie);
             }
+            int targetcal = totalcal - (int)(pd.planCal);
+            string[] target = new string[3];
+            target[0] = getTargetMile("walk", targetcal);
+            target[1] = getTargetMile("ran", targetcal);
+            target[2] = getTargetMile("bicycling", targetcal);
+            ViewBag.myRecipes = pd.myRecipes;
+            ViewBag.exercise = target;
+            ViewBag.target = targetcal;
+            return View();
+        }
+
+        public string getTargetMile(string type,int targetcal)
+        {
+            int[] runCalArr = new int[9];
+            string[] runmile = new string[9];
+            String url = "https://trackapi.nutritionix.com/v2/natural/exercise";
+            //  String[] searchArray = { "five apple", "two bread", "5000ml milk" };
             String content = "{\"query\":\"";
             //拼接查询字符串
-             for (int i = 0; i < searchArray.Length; i++)
-             {
-                 content = content + searchArray[i]+ " and ";
-                 if (i == searchArray.Length - 1)
-                 {
-                     content = content + "\"}";
-                }
-             }
-           
-            String result = "";
-            Dictionary<string, string> calroieMap = new Dictionary<string, string>();
-            //发送请求
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-            req.Method = "POST";
-            req.ContentType = "application/json";
-            req.Headers.Add("x-app-id", "7258bd60");
-            req.Headers.Add("x-app-key", "d8de75744e7faca5111b0e60efc09549");
-            byte[] data = Encoding.UTF8.GetBytes(content);
-            req.ContentLength = data.Length;
-            using (Stream reqStream = req.GetRequestStream())
+            for (int i = 0; i < 9; i++)
             {
-                reqStream.Write(data, 0, data.Length);
-                reqStream.Close();
-            }
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            Stream stream = resp.GetResponseStream();
-            //获取响应内容  
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                result = reader.ReadToEnd();
-            }
-            //json解析
-            RootObject rb = JsonConvert.DeserializeObject<RootObject>(result);
-            foreach (Foods ep in rb.foods)
-            {
-                if (!calroieMap.ContainsKey(ep.food_name))
+                runmile[i] = content + type + " " + (i + 1) + " miles\"," + "\"gender\":\"" + pd.Gender + "\",\"weight_kg\":\"" + pd.Weight + "\",\"height_cm\":\"" + pd.Height + "\",\"age\":\"" + pd.Age + "\"}";
+
+                String result = "";
+               
+                //发送请求
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                req.Method = "POST";
+                req.ContentType = "application/json";
+                //old account
+                //req.Headers.Add("x-app-id", "dd79a6ae");
+               // req.Headers.Add("x-app-key", "039958acd7a63688e95b981df11901b6");
+
+                req.Headers.Add("x-app-id", "d6be168c");
+                req.Headers.Add("x-app-key", "7eefef8e945dba3acdf87d4c90343bef");
+                byte[] data = Encoding.UTF8.GetBytes(runmile[i]);
+                req.ContentLength = data.Length;
+                using (Stream reqStream = req.GetRequestStream())
                 {
-                    calroieMap.Add(ep.food_name, ep.nf_calories);
+                    reqStream.Write(data, 0, data.Length);
+                    reqStream.Close();
                 }
-            }
-            int calroie = 0;
-            foreach(var item in calroieMap)
-            {
-                calroie = calroie + (int)float.Parse(item.Value);
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                Stream stream = resp.GetResponseStream();
+                //获取响应内容  
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    result = reader.ReadToEnd();
+                }
+                //json解析
+                rootb rb = JsonConvert.DeserializeObject<rootb>(result);
+
+                foreach (Exercises exercise in rb.exercises)
+                {
+                    runCalArr[i] = (targetcal - (int)double.Parse(exercise.nf_calories)) < 0 ? -(targetcal - (int)double.Parse(exercise.nf_calories)) : (targetcal - (int)double.Parse(exercise.nf_calories));
+                }
             }
 
-            return (calroie/(int)float.Parse(serveNum)).ToString();
-            
+            ArrayList al1 = new ArrayList(runCalArr);
+            string targetMiles="";
+            al1.Sort();
+            int min1 = Convert.ToInt32(al1[0]);
+            for (int i = 0; i < 9; i++)
+            {
+                if (runCalArr[i] == min1)
+                {
+                    targetMiles = (i + 1).ToString();
+                }
+            }
+            return targetMiles;
         }
 
         public int GetDefaultRecipe()
@@ -1424,7 +1548,34 @@ namespace WebApplication13.Controllers
         /// 
         /// </summary>
         public List<HitsItem> hits { get; set; }
+
+
     }
 
-}
+        public class Photo1
+        {
+            public string thumb { get; set; }
+            public string highres { get; set; }
+        }
+
+        public class Exercises
+        {
+            public string tag_id { get; set; }
+            public string user_input { get; set; }
+            public string duration_min { get; set; }
+            public string met { get; set; }
+            public string nf_calories { get; set; }
+            public Photo1 photo { get; set; }
+            public string compendium_code { get; set; }
+            public string name { get; set; }
+            public string description { get; set; }
+            public string benefits { get; set; }
+        }
+
+        public class rootb
+        {
+            public List<Exercises> exercises { get; set; }
+        }
+
+    }
 }

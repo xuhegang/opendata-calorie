@@ -80,7 +80,7 @@
                     <a class="chip margin-8-right rectype " href="javascript:void(0)">Chinese</a>
                     <a class="chip margin-8-right rectype" href="javascript:void(0)">French</a>
                     <a class="chip margin-8-right rectype" href="javascript:void(0)">Ice cream</a>
-                    <a class="chip margin-8-right rectype" href="javascript:void(0)">Cookies</a>
+                    <a class="chip margin-8-right rectype" href="javascript:void(0)">Chicken</a>
                 </div>
             </div>
         </div>
@@ -292,29 +292,6 @@
     <script src="~/js/main.js"></script>
     <script src="~/js/show.js"></script>
     <script src="~/js/showRecipes.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $(".rectype").click(function () {
-                var buttonval = this.innerHTML;
-                console.log(buttonval);
-                $.ajaxSetup({
-                    async: true
-                });
-                $("#insertpoint").load("/Home/InitialRec?search=" + encodeURI(buttonval));
-            });
-            $("#searchform").submit(function (event) {
-                var event = event || window.event;
-                event.preventDefault(); // 兼容标准浏览器
-                window.event.returnValue = false; // 兼容IE6~8
-                var inputval = $("#searchinput").val();
-                console.log(inputval);
-                $.ajaxSetup({
-                    async: true
-                });
-                $("#insertpoint").load("/Home/InitialRec?search=" + encodeURI(inputval));
-            });         
-        });
-    </script>  
-   
+    <script src="~/js/test.js"></script>
     </body>
 </html>
